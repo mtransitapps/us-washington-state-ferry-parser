@@ -79,28 +79,28 @@ public class WashingtonStateFerryAgencyTools extends DefaultAgencyTools {
 		return MAgency.ROUTE_TYPE_FERRY;
 	}
 
-	private static final String SEP = " ";
+	private static final String SEP = "-";
 
-	private static final String ANACORTES_RSN = "ANC";
-	private static final String BAINBRIDGE_ISLAND_RSN = "BBR";
-	private static final String BREMERTON_RSN = "BRM";
-	private static final String CLINTON_RSN = "CLT";
-	private static final String COUPEVILLE_RSN = "CPV";
-	private static final String EDMONDS_RSN = "EDM";
-	private static final String FAUNTLEROY_RSN = "FLR";
-	private static final String FRIDAY_HARBOR_RSN = "FDH";
-	private static final String KINGSTON_RSN = "KGS";
-	private static final String LOPEZ_ISLAND_RSN = "LPI";
-	private static final String MULKITEO_RSN = "MKT";
-	private static final String ORCAS_ISLAND_RSN = "OCI";
-	private static final String POINT_DEFIANCE_RSN = "PDF";
-	private static final String PORT_TOWNSEND_RSN = "PTS";
-	private static final String SEATTLE_RSN = "STL";
-	private static final String SHAW_ISLAND_RSN = "SHI";
-	private static final String SIDNEY_BC_RSN = "SDN";
-	private static final String SOUTHWORTH_RSN = "SWR";
-	private static final String TAHLEQUAH_RSN = "TLQ";
-	private static final String VASHON_ISLAND_RSN = "VSI";
+	private static final String ANACORTES_RSN = "Ana";
+	private static final String BAINBRIDGE_ISLAND_RSN = "Bai";
+	private static final String BREMERTON_RSN = "Bre";
+	private static final String CLINTON_RSN = "Cli";
+	private static final String COUPEVILLE_RSN = "Cou"; // "key";
+	private static final String EDMONDS_RSN = "Edm";
+	private static final String FAUNTLEROY_RSN = "Fau";
+	private static final String FRIDAY_HARBOR_RSN = "Fri"; // "fh";
+	private static final String KINGSTON_RSN = "Kin"; // "king";
+	private static final String LOPEZ_ISLAND_RSN = "Lop";
+	private static final String MULKITEO_RSN = "Mul"; // "muk";
+	private static final String ORCAS_ISLAND_RSN = "Orc";
+	private static final String POINT_DEFIANCE_RSN = "Def"; // "pd";
+	private static final String PORT_TOWNSEND_RSN = "Tow"; // "pt";
+	private static final String SEATTLE_RSN = "Sea";
+	private static final String SHAW_ISLAND_RSN = "Sha";
+	private static final String SIDNEY_BC_RSN = "Sid";
+	private static final String SOUTHWORTH_RSN = "Sou";
+	private static final String TAHLEQUAH_RSN = "Tah"; // "tal";
+	private static final String VASHON_ISLAND_RSN = "Vas";
 
 	@Override
 	public String getRouteShortName(GRoute gRoute) {
