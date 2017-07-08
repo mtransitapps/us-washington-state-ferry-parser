@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../commons/commons.sh
-echo ">> Listing change...";
+echo "> Listing change...";
 TARGET=$(cat "change_directory");
 RESULT=$(git -C $TARGET status);
 checkResult $? false;
@@ -16,4 +16,4 @@ if [ "$RESULT" -gt 0 ]; then
 	git -C $TARGET status | grep "res/raw" | head -n 7;
 	exit -1;
 fi
-echo ">> Listing change... DONE";
+echo "> Listing change... DONE";
