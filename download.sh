@@ -12,6 +12,15 @@ else
     wget --header="User-Agent: MonTransit" --timeout=60 --tries=6 -S $URL;
     checkResult $?;
 fi;
+# DEBUG
+DEBUG=${pwd}; # DEBUG
+echo "DEBUG ---------------------------------";
+echo "DEBUG > pwd:"; # DEBUG
+pwd;
+echo "DEBUG > ls -al:"; # DEBUG
+ls -al;
+echo "DEBUG ---------------------------------";
+# DEBUG
 if [ -e $FILENAME ]; then
     mv $FILENAME input/gtfs.zip;
     checkResult $?;
