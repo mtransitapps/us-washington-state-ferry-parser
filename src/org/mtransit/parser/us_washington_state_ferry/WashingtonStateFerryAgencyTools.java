@@ -33,7 +33,7 @@ public class WashingtonStateFerryAgencyTools extends DefaultAgencyTools {
 		if (args == null || args.length == 0) {
 			args = new String[3];
 			args[0] = "input/gtfs.zip";
-			args[1] = "../us-washington-state-ferry-android/res/raw/";
+			args[1] = "../app-android/res/raw/";
 			args[2] = ""; // files-prefix
 		}
 		new WashingtonStateFerryAgencyTools().start(args);
@@ -169,6 +169,7 @@ public class WashingtonStateFerryAgencyTools extends DefaultAgencyTools {
 	}
 
 	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
+
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
 		ALL_ROUTE_TRIPS2 = map2;
