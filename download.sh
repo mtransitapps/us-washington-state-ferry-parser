@@ -2,6 +2,7 @@
 source ../commons/commons.sh
 echo ">> Downloading..."
 URL=`cat input_url`;
+mkdir -p input;
 download $URL "input/gtfs.zip";
 checkResult $?;
 if [ -e "input_url_next" ]; then
