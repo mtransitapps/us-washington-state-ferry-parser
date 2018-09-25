@@ -7,7 +7,7 @@ CLASS=$(cat "parser_class");
 java -Xms2048m -Xmx8192m -Dfile.encoding=UTF-8 \
 -classpath \
 bin:\
-$PARSER_CLASSPATH \
-$CLASS;
+${PARSER_CLASSPATH} \
+${CLASS};
 checkResult $? false;
 echo ">> Parsing... DONE";
