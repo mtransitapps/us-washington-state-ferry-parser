@@ -38,11 +38,7 @@ public class WashingtonStateFerryAgencyTools extends DefaultAgencyTools {
 	public void start(@NotNull String[] args) {
 		MTLog.log("Generating Washington State ferry data...");
 		long start = System.currentTimeMillis();
-		// this.serviceIds = extractUsefulServiceIds(args, this, true); // 1 service ID by day
-		boolean isNext = "next_".equalsIgnoreCase(args[2]);
-		if (isNext) {
-			this.serviceIdInts = new HashSet<>(); // non-null = service IDs
-		}
+		this.serviceIdInts = extractUsefulServiceIdInts(args, this, true);
 		super.start(args);
 		MTLog.log("Generating Washington State ferry data... DONE in %s.", Utils.getPrettyDuration(System.currentTimeMillis() - start));
 	}
