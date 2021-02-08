@@ -1,35 +1,27 @@
 package org.mtransit.parser.us_washington_state_ferry;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.apache.commons.lang3.StringUtils;
-import org.mtransit.parser.CleanUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.mtransit.commons.CleanUtils;
+import org.mtransit.commons.StringUtils;
 import org.mtransit.parser.DefaultAgencyTools;
-import org.mtransit.parser.Pair;
-import org.mtransit.parser.SplitUtils;
-import org.mtransit.parser.SplitUtils.RouteTripSpec;
+import org.mtransit.parser.MTLog;
 import org.mtransit.parser.Utils;
 import org.mtransit.parser.gtfs.data.GCalendar;
 import org.mtransit.parser.gtfs.data.GCalendarDate;
 import org.mtransit.parser.gtfs.data.GRoute;
 import org.mtransit.parser.gtfs.data.GSpec;
-import org.mtransit.parser.gtfs.data.GStop;
 import org.mtransit.parser.gtfs.data.GTrip;
-import org.mtransit.parser.gtfs.data.GTripStop;
 import org.mtransit.parser.mt.data.MAgency;
 import org.mtransit.parser.mt.data.MRoute;
 import org.mtransit.parser.mt.data.MTrip;
-import org.mtransit.parser.mt.data.MTripStop;
+
+import java.util.HashSet;
 
 // https://business.wsdot.wa.gov/Transit/csv_files/wsf/google_transit.zip
 public class WashingtonStateFerryAgencyTools extends DefaultAgencyTools {
 
-	public static void main(String[] args) {
+	public static void main(@Nullable String[] args) {
 		if (args == null || args.length == 0) {
 			args = new String[3];
 			args[0] = "input/gtfs.zip";
@@ -39,50 +31,52 @@ public class WashingtonStateFerryAgencyTools extends DefaultAgencyTools {
 		new WashingtonStateFerryAgencyTools().start(args);
 	}
 
-	private HashSet<String> serviceIds;
+	@Nullable
+	private HashSet<Integer> serviceIdInts;
 
 	@Override
-	public void start(String[] args) {
-		System.out.printf("\nGenerating Washington State ferry data...");
+	public void start(@NotNull String[] args) {
+		MTLog.log("Generating Washington State ferry data...");
 		long start = System.currentTimeMillis();
 		// this.serviceIds = extractUsefulServiceIds(args, this, true); // 1 service ID by day
 		boolean isNext = "next_".equalsIgnoreCase(args[2]);
 		if (isNext) {
-			this.serviceIds = new HashSet<String>(); // non-null = service IDs
+			this.serviceIdInts = new HashSet<>(); // non-null = service IDs
 		}
 		super.start(args);
-		System.out.printf("\nGenerating Washington State ferry data... DONE in %s.\n", Utils.getPrettyDuration(System.currentTimeMillis() - start));
+		MTLog.log("Generating Washington State ferry data... DONE in %s.", Utils.getPrettyDuration(System.currentTimeMillis() - start));
 	}
 
 	@Override
 	public boolean excludingAll() {
-		return this.serviceIds != null && this.serviceIds.isEmpty();
+		return this.serviceIdInts != null && this.serviceIdInts.isEmpty();
 	}
 
 	@Override
-	public boolean excludeCalendar(GCalendar gCalendar) {
-		if (this.serviceIds != null) {
-			return excludeUselessCalendar(gCalendar, this.serviceIds);
+	public boolean excludeCalendar(@NotNull GCalendar gCalendar) {
+		if (this.serviceIdInts != null) {
+			return excludeUselessCalendarInt(gCalendar, this.serviceIdInts);
 		}
 		return super.excludeCalendar(gCalendar);
 	}
 
 	@Override
-	public boolean excludeCalendarDate(GCalendarDate gCalendarDates) {
-		if (this.serviceIds != null) {
-			return excludeUselessCalendarDate(gCalendarDates, this.serviceIds);
+	public boolean excludeCalendarDate(@NotNull GCalendarDate gCalendarDates) {
+		if (this.serviceIdInts != null) {
+			return excludeUselessCalendarDateInt(gCalendarDates, this.serviceIdInts);
 		}
 		return super.excludeCalendarDate(gCalendarDates);
 	}
 
 	@Override
-	public boolean excludeTrip(GTrip gTrip) {
-		if (this.serviceIds != null) {
-			return excludeUselessTrip(gTrip, this.serviceIds);
+	public boolean excludeTrip(@NotNull GTrip gTrip) {
+		if (this.serviceIdInts != null) {
+			return excludeUselessTripInt(gTrip, this.serviceIdInts);
 		}
 		return super.excludeTrip(gTrip);
 	}
 
+	@NotNull
 	@Override
 	public Integer getAgencyRouteType() {
 		return MAgency.ROUTE_TYPE_FERRY;
@@ -111,9 +105,11 @@ public class WashingtonStateFerryAgencyTools extends DefaultAgencyTools {
 	private static final String TAHLEQUAH_RSN = "Tah"; // "tal";
 	private static final String VASHON_ISLAND_RSN = "Vas";
 
+	@Nullable
 	@Override
-	public String getRouteShortName(GRoute gRoute) {
+	public String getRouteShortName(@NotNull GRoute gRoute) {
 		if (StringUtils.isEmpty(gRoute.getRouteShortName())) {
+			//noinspection deprecation
 			int rsn = Integer.parseInt(gRoute.getRouteId());
 			switch (rsn) {
 			// @formatter:off
@@ -161,9 +157,7 @@ public class WashingtonStateFerryAgencyTools extends DefaultAgencyTools {
 			case 2220: return VASHON_ISLAND_RSN + SEP + SOUTHWORTH_RSN; // Vashon Island - Southworth
 			// @formatter:on
 			}
-			System.out.printf("\nUnexpected route short name %s!\n", gRoute);
-			System.exit(-1);
-			return null;
+			throw new MTLog.Fatal("Unexpected route short name %s!", gRoute);
 		}
 		return super.getRouteShortName(gRoute);
 	}
@@ -172,73 +166,30 @@ public class WashingtonStateFerryAgencyTools extends DefaultAgencyTools {
 
 	private static final String AGENCY_COLOR = AGENCY_COLOR_GREEN;
 
+	@NotNull
 	@Override
 	public String getAgencyColor() {
 		return AGENCY_COLOR;
 	}
 
-	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
-
-	static {
-		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
-		ALL_ROUTE_TRIPS2 = map2;
+	@Override
+	public void setTripHeadsign(@NotNull MRoute mRoute, @NotNull MTrip mTrip, @NotNull GTrip gTrip, @NotNull GSpec gtfs) {
+		mTrip.setHeadsignString(
+				cleanTripHeadsign(gTrip.getTripHeadsign()),
+				gTrip.getDirectionId() == null ? 0 : gTrip.getDirectionId()
+		);
 	}
 
 	@Override
-	public int compareEarly(long routeId, List<MTripStop> list1, List<MTripStop> list2, MTripStop ts1, MTripStop ts2, GStop ts1GStop, GStop ts2GStop) {
-		if (ALL_ROUTE_TRIPS2.containsKey(routeId)) {
-			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop, this);
-		}
-		return super.compareEarly(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
+	public boolean mergeHeadsign(@NotNull MTrip mTrip, @NotNull MTrip mTripToMerge) {
+		throw new MTLog.Fatal("Unexpected trips to merge: %s & %s!", mTrip, mTripToMerge);
 	}
 
+	@NotNull
 	@Override
-	public ArrayList<MTrip> splitTrip(MRoute mRoute, GTrip gTrip, GSpec gtfs) {
-		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
-			return ALL_ROUTE_TRIPS2.get(mRoute.getId()).getAllTrips();
-		}
-		return super.splitTrip(mRoute, gTrip, gtfs);
-	}
-
-	@Override
-	public Pair<Long[], Integer[]> splitTripStop(MRoute mRoute, GTrip gTrip, GTripStop gTripStop, ArrayList<MTrip> splitTrips, GSpec routeGTFS) {
-		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
-			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()), this);
-		}
-		return super.splitTripStop(mRoute, gTrip, gTripStop, splitTrips, routeGTFS);
-	}
-
-	@Override
-	public void setTripHeadsign(MRoute mRoute, MTrip mTrip, GTrip gTrip, GSpec gtfs) {
-		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
-			return; // split
-		}
-		int directionId = gTrip.getDirectionId() == null ? 0 : gTrip.getDirectionId();
-		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), directionId);
-	}
-
-	@Override
-	public boolean mergeHeadsign(MTrip mTrip, MTrip mTripToMerge) {
-		System.out.printf("\nUnexpected trips to merge: %s & %s!\n", mTrip, mTripToMerge);
-		System.exit(-1);
-		return false;
-	}
-
-	private static final Pattern TO = Pattern.compile("((^|\\W){1}(to)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
-
-	private static final String BC_SHORT = "BC";
-	private static final Pattern BC = Pattern.compile("((^|\\W){1}(b\\.c\\.)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
-	private static final String BC_REPLACEMENT = "$2" + BC_SHORT + "$4";
-
-	@Override
-	public String cleanTripHeadsign(String tripHeadsign) {
-		Matcher matcherTO = TO.matcher(tripHeadsign);
-		if (matcherTO.find()) {
-			String gTripHeadsignAfterTO = tripHeadsign.substring(matcherTO.end());
-			tripHeadsign = gTripHeadsignAfterTO;
-		}
+	public String cleanTripHeadsign(@NotNull String tripHeadsign) {
+		tripHeadsign = CleanUtils.keepToAndRemoveVia(tripHeadsign);
 		tripHeadsign = CleanUtils.cleanSlashes(tripHeadsign);
-		tripHeadsign = BC.matcher(tripHeadsign).replaceAll(BC_REPLACEMENT);
 		tripHeadsign = CleanUtils.CLEAN_AT.matcher(tripHeadsign).replaceAll(CleanUtils.CLEAN_AT_REPLACEMENT);
 		tripHeadsign = CleanUtils.CLEAN_AND.matcher(tripHeadsign).replaceAll(CleanUtils.CLEAN_AND_REPLACEMENT);
 		tripHeadsign = CleanUtils.cleanNumbers(tripHeadsign);
@@ -246,13 +197,13 @@ public class WashingtonStateFerryAgencyTools extends DefaultAgencyTools {
 		return CleanUtils.cleanLabel(tripHeadsign);
 	}
 
+	@NotNull
 	@Override
-	public String cleanStopName(String gStopName) {
+	public String cleanStopName(@NotNull String gStopName) {
 		gStopName = CleanUtils.SAINT.matcher(gStopName).replaceAll(CleanUtils.SAINT_REPLACEMENT);
 		gStopName = CleanUtils.CLEAN_AND.matcher(gStopName).replaceAll(CleanUtils.CLEAN_AND_REPLACEMENT);
 		gStopName = CleanUtils.CLEAN_AT.matcher(gStopName).replaceAll(CleanUtils.CLEAN_AT_REPLACEMENT);
 		gStopName = CleanUtils.cleanSlashes(gStopName);
-		gStopName = CleanUtils.removePoints(gStopName);
 		gStopName = CleanUtils.cleanStreetTypes(gStopName);
 		return CleanUtils.cleanLabel(gStopName);
 	}
